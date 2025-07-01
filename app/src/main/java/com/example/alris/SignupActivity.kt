@@ -1,6 +1,5 @@
 package com.example.alris
 
-import android.content.Intent
 import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -9,49 +8,46 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 
-class MainActivity : AppCompatActivity() {
+class SignupActivity : AppCompatActivity() {
 
     private lateinit var usernameInput: EditText
     private lateinit var passwordInput: EditText
-    private lateinit var loginButton: Button
-    private lateinit var goToSignup: TextView
+    private lateinit var phoneInput: EditText
+    private lateinit var signupButton: Button
 
     private val client = OkHttpClient()
     private val baseUrl = "https://your-server-url.com"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
+        setContentView(R.layout.activity_signup)
 
-        usernameInput = findViewById(R.id.usernameInput)
-        passwordInput = findViewById(R.id.passwordInput)
-        loginButton = findViewById(R.id.loginButton)
-        goToSignup = findViewById(R.id.goToSignup)
+        usernameInput = findViewById(R.id.signupUsernameInput)
+        passwordInput = findViewById(R.id.signupPasswordInput)
+        phoneInput = findViewById(R.id.signupPhoneInput)
+        signupButton = findViewById(R.id.signupButton)
 
-        loginButton.setOnClickListener {
+        signupButton.setOnClickListener {
             val username = usernameInput.text.toString()
             val password = passwordInput.text.toString()
-            loginUser(username, password)
-        }
-
-        goToSignup.setOnClickListener {
-            startActivity(Intent(this, SignupActivity::class.java))
+            val phone = phoneInput.text.toString()
+            signupUser(username, password, phone)
         }
     }
 
-    private fun loginUser(username: String, password: String) {
-        val json = """{"username":"$username", "password":"$password"}"""
+    private fun signupUser(username: String, password: String, phone: String) {
+        val json = """{"username":"$username", "password":"$password", "phone":"$phone"}"""
         val body = json.toRequestBody("application/json".toMediaTypeOrNull())
 
         val request = Request.Builder()
-            .url("$baseUrl/login")
+            .url("$baseUrl/signup")
             .post(body)
             .build()
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 runOnUiThread {
-                    showToast("Login failed: ${e.message}")
+                    showToast("Signup failed: ${e.message}")
                 }
             }
 
