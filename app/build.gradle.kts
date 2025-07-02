@@ -14,13 +14,22 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("C:/Users/hp/Desktop/Key/keystore.jks")
+            storePassword = project.property("KEYSTORE_PASSWORD") as String
+            keyAlias = project.property("KEY_ALIAS") as String
+            keyPassword = project.property("KEY_PASSWORD") as String
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -44,7 +53,6 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.13"
     }
-
 }
 
 dependencies {
@@ -52,7 +60,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-auth:21.0.0")
     implementation("com.google.android.material:material:1.11.0")
 
-    // Firebase Auth
+    // Firebase
     implementation("com.google.firebase:firebase-auth-ktx:23.0.0")
 
     // OkHttp
@@ -67,7 +75,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     debugImplementation("androidx.compose.ui:ui-tooling")
 
-    // Lifecycle & AppCompat
+    // Lifecycle & UI
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.appcompat:appcompat:1.7.1")
@@ -78,6 +86,8 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:1.3.0")
     implementation("androidx.camera:camera-view:1.3.0")
     implementation("androidx.camera:camera-extensions:1.3.0")
+
+    // Location Services
     implementation("com.google.android.gms:play-services-location:21.0.1")
 
     // Testing
