@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "379087277976",
+    "project_id": "alris-fa927",
+    "storage_bucket": "alris-fa927.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:379087277976:android:122e7becf5a08e607965ed",
+        "android_client_info": {
+          "package_name": "com.example.alris"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "379087277976-v6g179gfvidrletgr34maav62dtbt7k3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.alris",
+            "certificate_hash": "3da163b76f1b45fd281fb5c6a136644577b47ea8"
+          }
+        },
+        {
+          "client_id": "379087277976-35hnmmq1bdv3oipd61e2rtm5ev30c36n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyABTp1OIMRBHH752FcZfo6Sy3zlRQFgpTg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "379087277976-35hnmmq1bdv3oipd61e2rtm5ev30c36n.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Alris</string>
+    <string name="default_web_client_id">379087277976-35hnmmq1bdv3oipd61e2rtm5ev30c36n.apps.googleusercontent.com</string>
+
 </resources>
