@@ -39,7 +39,7 @@ class MainActivity : ComponentActivity() {
     private val RC_SIGN_IN = 1001
     private lateinit var auth: FirebaseAuth
     private val client = OkHttpClient()
-    private val baseUrl = "http://192.168.0.159:5000"
+     val baseUrl =Constants.BASE_URL
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

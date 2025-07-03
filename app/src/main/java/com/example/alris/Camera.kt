@@ -137,9 +137,10 @@ class Camera : AppCompatActivity() {
             .build()
 
         val request = Request.Builder()
-            .url("http://192.168.0.159:5000/upload") // change to your actual endpoint
+            .url("${Constants.BASE_URL}/upload")
             .post(requestBody)
             .build()
+
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
