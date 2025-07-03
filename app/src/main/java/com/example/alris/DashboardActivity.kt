@@ -1,68 +1,37 @@
 package com.example.alris
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import org.osmdroid.config.Configuration
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
-import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.Marker
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.*
+import com.example.alris.ui.theme.AlrisTheme
 
-class DashboardActivity : AppCompatActivity() {
-
-    private lateinit var mapView: MapView
-
+class DashboardActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // OSMDroid setup
-        Configuration.getInstance().load(this, getSharedPreferences("osmdroid", MODE_PRIVATE))
-        Configuration.getInstance().userAgentValue = packageName
-
-        setContentView(R.layout.activity_dashboard)
-
-        mapView = findViewById(R.id.mapView)
-        setupMap()
-
-        // 🔽 Drop your fixed report points here
-        dropReportPoint(8.5123, 76.9416, "Drainage Issue", "Overflowing during rain")
-        dropReportPoint(8.5130, 76.9420, "Broken Streetlight", "Reported on 2 July")
-        dropReportPoint(8.5141, 76.9435, "Pothole", "Severe road damage")
-    }
-
-    private fun setupMap() {
-        mapView.setTileSource(TileSourceFactory.MAPNIK)
-        mapView.setMultiTouchControls(true)
-        mapView.setBuiltInZoomControls(true)
-
-        val mapController = mapView.controller
-        mapController.setZoom(16.0)
-        mapController.setCenter(GeoPoint(8.5126, 76.9419))
-    }
-
-    private fun dropReportPoint(latitude: Double, longitude: Double, title: String, snippet: String) {
-        val marker = Marker(mapView).apply {
-            position = GeoPoint(latitude, longitude)
-            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-            this.title = title
-            this.snippet = snippet
+        setContent {
+            AlrisTheme {
+                val navController = rememberNavController()
+                Scaffold(
+                    bottomBar = {
+                        BottomNavigationBar(navController)
+                    }
+                ) { padding ->
+                    Box(modifier = Modifier.padding(padding)) {
+                        NavHost(navController, startDestination = "map") {
+                            composable("map") { MapScreen() }
+                            composable("camera") { CameraScreen() }
+                            composable("settings") { SettingsScreen() }
+                        }
+                    }
+                }
+            }
         }
-        mapView.overlays.add(marker)
-        mapView.invalidate()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        mapView.onResume()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        mapView.onPause()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        mapView.onDetach()
     }
 }
