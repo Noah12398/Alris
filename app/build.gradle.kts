@@ -36,7 +36,7 @@ android {
             )
         }
         debug {
-            signingConfig = signingConfigs.getByName("release") // 👈 Force debug to use release keystore
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
