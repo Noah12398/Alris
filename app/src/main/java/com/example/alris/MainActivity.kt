@@ -2,6 +2,7 @@ package com.example.alris
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -38,7 +39,7 @@ class MainActivity : ComponentActivity() {
     private val RC_SIGN_IN = 1001
     private lateinit var auth: FirebaseAuth
     private val client = OkHttpClient()
-    private val baseUrl = "http://192.168.0.159:5000"
+    private val baseUrl = "http://0.0.0.0:5000"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,10 +71,12 @@ class MainActivity : ComponentActivity() {
                 val account = task.getResult(ApiException::class.java)!!
                 firebaseAuthWithGoogle(account.idToken!!)
             } catch (e: ApiException) {
-                showToast("Google sign-in failed.")
+                Log.e("GoogleSignIn", "Google sign-in failed. Code: ${e.statusCode}, Message: ${e.localizedMessage}", e)
+                showToast("Google sign-in failed. Code: ${e.statusCode}")
             }
         }
     }
+
 
     private fun firebaseAuthWithGoogle(idToken: String) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
@@ -107,14 +110,17 @@ class MainActivity : ComponentActivity() {
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
+                Log.e("AlrisNetwork", "Failed to connect to server", e) // Logs full stack trace
                 runOnUiThread { showToast("Server error: ${e.message}") }
             }
 
             override fun onResponse(call: Call, response: Response) {
                 runOnUiThread {
                     if (response.isSuccessful) {
+                        Log.i("AlrisNetwork", "Server verification successful.")
                         showToast("Google login verified with server.")
                     } else {
+                        Log.w("AlrisNetwork", "Server rejected token. Code: ${response.code}")
                         showToast("Server rejected token.")
                     }
                 }

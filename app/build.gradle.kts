@@ -19,7 +19,7 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("C:/Users/hp/Desktop/Key/keystore.jks")
+            storeFile = file("../Key/keystore.jks")
             storePassword = project.property("KEYSTORE_PASSWORD") as String
             keyAlias = project.property("KEY_ALIAS") as String
             keyPassword = project.property("KEY_PASSWORD") as String
@@ -34,6 +34,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        debug {
+            signingConfig = signingConfigs.getByName("release") // 👈 Force debug to use release keystore
         }
     }
 
