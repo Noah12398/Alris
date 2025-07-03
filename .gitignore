@@ -1,4 +1,4 @@
-/Key/*
+/Key/keystore.jks
 *.iml
 .gradle
 /local.properties
