@@ -39,7 +39,7 @@ class MainActivity : ComponentActivity() {
     private val RC_SIGN_IN = 1001
     private lateinit var auth: FirebaseAuth
     private val client = OkHttpClient()
-    private val baseUrl = "http://0.0.0.0:5000"
+    private val baseUrl = "http://192.168.0.159:5000"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -119,12 +119,18 @@ class MainActivity : ComponentActivity() {
                     if (response.isSuccessful) {
                         Log.i("AlrisNetwork", "Server verification successful.")
                         showToast("Google login verified with server.")
+
+                        // Navigate to DashboardActivity
+                        val intent = Intent(this@MainActivity, DashboardActivity::class.java)
+                        startActivity(intent)
+                        finish() // optional: closes login screen
                     } else {
                         Log.w("AlrisNetwork", "Server rejected token. Code: ${response.code}")
                         showToast("Server rejected token.")
                     }
                 }
             }
+
         })
     }
 

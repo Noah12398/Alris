@@ -137,7 +137,7 @@ class Camera : AppCompatActivity() {
             .build()
 
         val request = Request.Builder()
-            .url("https://alris-server.onrender.com/upload") // change to your actual endpoint
+            .url("http://192.168.0.159:5000/upload") // change to your actual endpoint
             .post(requestBody)
             .build()
 
