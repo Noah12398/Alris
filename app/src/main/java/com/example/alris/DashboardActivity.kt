@@ -1,70 +1,68 @@
 package com.example.alris
 
-import android.content.Intent
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.style.TextAlign
+import androidx.appcompat.app.AppCompatActivity
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 
-class DashboardActivity : ComponentActivity() {
+class DashboardActivity : AppCompatActivity() {
+
+    private lateinit var mapView: MapView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            DashboardScreen()
-        }
+
+        // OSMDroid setup
+        Configuration.getInstance().load(this, getSharedPreferences("osmdroid", MODE_PRIVATE))
+        Configuration.getInstance().userAgentValue = packageName
+
+        setContentView(R.layout.activity_dashboard)
+
+        mapView = findViewById(R.id.mapView)
+        setupMap()
+
+        // 🔽 Drop your fixed report points here
+        dropReportPoint(8.5123, 76.9416, "Drainage Issue", "Overflowing during rain")
+        dropReportPoint(8.5130, 76.9420, "Broken Streetlight", "Reported on 2 July")
+        dropReportPoint(8.5141, 76.9435, "Pothole", "Severe road damage")
     }
-}
 
-@Composable
-fun DashboardScreen() {
-    val context = LocalContext.current
+    private fun setupMap() {
+        mapView.setTileSource(TileSourceFactory.MAPNIK)
+        mapView.setMultiTouchControls(true)
+        mapView.setBuiltInZoomControls(true)
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Welcome to Alris Dashboard",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Center
-            )
+        val mapController = mapView.controller
+        mapController.setZoom(16.0)
+        mapController.setCenter(GeoPoint(8.5126, 76.9419))
+    }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "You're now signed in successfully using Google.\n\n" +
-                        "From here, you can access AI reports, submit issues, and manage your account.",
-                fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Button(onClick = {
-                context.startActivity(Intent(context, Camera::class.java))
-            }) {
-                Text("Go to Reports")
-            }
+    private fun dropReportPoint(latitude: Double, longitude: Double, title: String, snippet: String) {
+        val marker = Marker(mapView).apply {
+            position = GeoPoint(latitude, longitude)
+            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+            this.title = title
+            this.snippet = snippet
         }
+        mapView.overlays.add(marker)
+        mapView.invalidate()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mapView.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        mapView.onPause()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mapView.onDetach()
     }
 }
