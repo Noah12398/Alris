@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.example.alris.Constants.logoutAndGoToLogin
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -39,6 +40,10 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import com.example.alris.ui.theme.AlrisTheme
 
 
 @SuppressLint("MissingPermission")
@@ -155,6 +160,18 @@ fun MapScreen() {
                 .padding(16.dp)
         )
 
+        // 🚀 Logout Button at top right
+        FloatingActionButton(
+            onClick = { logoutAndGoToLogin(context) },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 16.dp, end = 16.dp),
+            containerColor = MaterialTheme.colorScheme.error,
+            contentColor = MaterialTheme.colorScheme.onError
+        ) {
+            Icon(Icons.Default.ExitToApp, contentDescription = "Logout")
+        }
+
         // Statistics Card
         MapStatsCard(
             reportPoints = reportPoints,
@@ -162,6 +179,7 @@ fun MapScreen() {
                 .align(Alignment.TopEnd)
                 .padding(top = 80.dp, end = 16.dp)
         )
+
 
         // Report Details Bottom Sheet
         selectedReport?.let { report ->

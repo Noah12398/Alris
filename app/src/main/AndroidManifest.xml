@@ -36,7 +36,9 @@
             </intent-filter>
         </activity>
         <activity android:name=".DashboardActivity" />
-        <activity android:name=".Camera" />
+        <activity android:name=".PendingApprovalActivity" />
+        <activity android:name=".AdminActivity" />
+        <activity android:name=".MapActivity" />
 
 
 

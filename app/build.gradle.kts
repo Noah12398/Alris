@@ -59,16 +59,21 @@ android {
 }
 
 dependencies {
+    // Firebase BoM (manages versioning)
+    implementation(platform("com.google.firebase:firebase-bom:32.7.3"))
+
+    // Firebase libraries (no version numbers!)
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+
     // Google Sign-In
     implementation("com.google.android.gms:play-services-auth:21.0.0")
+
     implementation("com.google.android.material:material:1.11.0")
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.compose.material3:material3:1.2.1")
     implementation("org.osmdroid:osmdroid-android:6.1.14")
     implementation("androidx.compose.material:material-icons-extended")
-
-    // Firebase
-    implementation("com.google.firebase:firebase-auth-ktx:23.0.0")
 
     // OkHttp
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
@@ -102,3 +107,4 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
 }
+

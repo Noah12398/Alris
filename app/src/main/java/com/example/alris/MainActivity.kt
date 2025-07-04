@@ -6,22 +6,14 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.BlendMode.Companion.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.example.alris.ui.theme.AlrisTheme
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -31,52 +23,56 @@ import com.google.firebase.auth.GoogleAuthProvider
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
 import java.io.IOException
 
 class MainActivity : ComponentActivity() {
 
     private lateinit var googleSignInClient: GoogleSignInClient
-    private val RC_SIGN_IN = 1001
     private lateinit var auth: FirebaseAuth
+    private val RC_SIGN_IN = 1001
     private val client = OkHttpClient()
-     val baseUrl =Constants.BASE_URL
+    private val baseUrl = Constants.BASE_URL
+    private var loginRole = "user"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Firebase Auth
         auth = FirebaseAuth.getInstance()
 
+        // Google Sign-In config
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestIdToken(getString(R.string.default_web_client_id)) // From google-services.json
             .requestEmail()
             .build()
         googleSignInClient = GoogleSignIn.getClient(this, gso)
 
         setContent {
             AlrisTheme {
-                GoogleSignInScreen(onSignInClicked = {
-                    val signInIntent = googleSignInClient.signInIntent
-                    startActivityForResult(signInIntent, RC_SIGN_IN)
-                })
+                GoogleSignInTabbedScreen(
+                    onSignInClicked = {
+                        val signInIntent = googleSignInClient.signInIntent
+                        startActivityForResult(signInIntent, RC_SIGN_IN)
+                    },
+                    onRoleSelected = { role -> loginRole = role }
+                )
             }
         }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-
         if (requestCode == RC_SIGN_IN) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             try {
-                val account = task.getResult(ApiException::class.java)!!
+                val account = task.getResult(ApiException::class.java)
                 firebaseAuthWithGoogle(account.idToken!!)
             } catch (e: ApiException) {
-                Log.e("GoogleSignIn", "Google sign-in failed. Code: ${e.statusCode}, Message: ${e.localizedMessage}", e)
-                showToast("Google sign-in failed. Code: ${e.statusCode}")
+                showToast("Google sign-in failed: ${e.statusCode}")
             }
         }
     }
-
 
     private fun firebaseAuthWithGoogle(idToken: String) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
@@ -84,52 +80,72 @@ class MainActivity : ComponentActivity() {
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
                     val user = auth.currentUser
-                    user?.getIdToken(true)?.addOnCompleteListener { tokenTask ->
-                        if (tokenTask.isSuccessful) {
-                            val finalToken = tokenTask.result?.token
-                            sendIdTokenToServer(finalToken)
-                        } else {
-                            showToast("Failed to get ID token.")
-                        }
+                    user?.getIdToken(true)?.addOnSuccessListener { result ->
+                        sendIdTokenToServer(result.token)
                     }
                 } else {
-                    showToast("Authentication failed.")
+                    showToast("Firebase authentication failed.")
                 }
             }
     }
 
     private fun sendIdTokenToServer(idToken: String?) {
         if (idToken == null) return
+        val json = """{"idToken":"$idToken", "role":"$loginRole"}"""
+        val requestBody = json.toRequestBody("application/json".toMediaTypeOrNull())
 
-        val json = """{"idToken":"$idToken"}"""
-        val body = json.toRequestBody("application/json".toMediaTypeOrNull())
         val request = Request.Builder()
             .url("$baseUrl/verifyToken")
-            .post(body)
+            .post(requestBody)
             .build()
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.e("AlrisNetwork", "Failed to connect to server", e) // Logs full stack trace
                 runOnUiThread { showToast("Server error: ${e.message}") }
             }
 
             override fun onResponse(call: Call, response: Response) {
                 runOnUiThread {
                     if (response.isSuccessful) {
-                        Log.i("AlrisNetwork", "Server verification successful.")
-                        showToast("Google login verified with server.")
+                        val body = response.body?.string()
+                        Log.d("SERVER_RESPONSE", "Raw response body: $body")
+                        if (body == null) {
+                            showToast("Empty response from server.")
+                            return@runOnUiThread
+                        }
 
-                        // Navigate to DashboardActivity
-                        val intent = Intent(this@MainActivity, DashboardActivity::class.java)
-                        startActivity(intent)
-                        finish() // optional: closes login screen
+                        try {
+                            val json = JSONObject(body)
+                            val status = json.optString("status", "pending")
+
+                            when {
+                                loginRole == "user" -> {
+                                    startActivity(Intent(this@MainActivity, DashboardActivity()::class.java))
+                                }
+                                loginRole == "admin" -> {
+                                    startActivity(Intent(this@MainActivity, AdminActivity::class.java))
+                                }
+                                status == "pending" && loginRole == "authority" -> {
+                                    startActivity(Intent(this@MainActivity, PendingApprovalActivity::class.java))
+                                }
+                                status == "approved" -> {
+                                    startActivity(Intent(this@MainActivity, DashboardActivity::class.java))
+                                }
+                                else -> {
+                                    showToast("Access not granted. Please wait for approval.")
+                                }
+                            }
+                            finish()
+                        } catch (e: Exception) {
+                            showToast("Error parsing server response.")
+                            Log.e("LoginError", "JSON parse error: $body", e)
+                        }
                     } else {
-                        Log.w("AlrisNetwork", "Server rejected token. Code: ${response.code}")
-                        showToast("Server rejected token.")
+                        showToast("Server error: ${response.code}")
                     }
                 }
             }
+
 
         })
     }
@@ -139,328 +155,43 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Composable
-fun AlrisTheme(content: @Composable () -> Unit) {
-    val colorScheme = darkColorScheme(
-        primary = Color(0xFF6C63FF),
-        secondary = Color(0xFF03DAC6),
-        background = Color(0xFF0A0A0A),
-        surface = Color(0xFF1A1A1A),
-        onPrimary = Color.White,
-        onSecondary = Color.Black,
-        onBackground = Color.White,
-        onSurface = Color.White
-    )
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        content = content
-    )
-}
 
 @Composable
-fun GoogleSignInScreen(onSignInClicked: () -> Unit) {
-    var isPressed by remember { mutableStateOf(false) }
+fun GoogleSignInTabbedScreen(onSignInClicked: () -> Unit, onRoleSelected: (String) -> Unit) {
+    val tabs = listOf("User", "Authority", "Admin")
+    var selectedTabIndex by remember { mutableStateOf(0) }
 
-    // Animated background gradient
-    val infiniteTransition = rememberInfiniteTransition(label = "background")
-    val gradientOffset by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(8000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "gradient"
-    )
+    onRoleSelected(tabs[selectedTabIndex].lowercase())
 
-    // Floating animation for elements
-    val floatingAnimation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 10f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(3000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "floating"
-    )
-
-    // Entrance animations
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = tween(150),
-        label = "scale"
-    )
-
-    LaunchedEffect(Unit) {
-        isPressed = false
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF1A1A2E).copy(alpha = 0.8f + gradientOffset * 0.2f),
-                        Color(0xFF16213E).copy(alpha = 0.9f),
-                        Color(0xFF0F0F23).copy(alpha = 1f)
-                    )
-                )
-            )
-    ) {
-        // Animated background circles
-        AnimatedBackgroundCircles()
-
-        Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(32.dp)
-                .offset(y = floatingAnimation.dp)
-        ) {
-
-
-            // Welcome text with gradient
-            Text(
-                text = "Welcome to",
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontWeight = FontWeight.Light,
-                    color = Color.White.copy(alpha = 0.7f)
-                ),
-                textAlign = TextAlign.Center
-            )
-
-            Text(
-                text = "ALRIS",
-                style = MaterialTheme.typography.displayMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 48.sp,
-                    color = Color.White
-                ),
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-
-            Text(
-                text = "Your AI-powered reporting platform",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    color = Color(0xFF03DAC6),
-                    fontWeight = FontWeight.Medium
-                ),
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(bottom = 64.dp)
-            )
-
-            // Google Sign-In Button
-            GoogleSignInButton(
-                onSignInClicked = onSignInClicked,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-            )
-        }
-    }
-}
-
-@Composable
-fun AnimatedBackgroundCircles() {
-    val infiniteTransition = rememberInfiniteTransition(label = "circles")
-
-    val circle1Alpha by infiniteTransition.animateFloat(
-        initialValue = 0.1f,
-        targetValue = 0.3f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(4000),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "circle1"
-    )
-
-    val circle2Alpha by infiniteTransition.animateFloat(
-        initialValue = 0.2f,
-        targetValue = 0.4f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(6000),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "circle2"
-    )
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Circle 1
-        Box(
-            modifier = Modifier
-                .size(200.dp)
-                .offset((-50).dp, (-80).dp)
-                .background(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color(0xFF6C63FF).copy(alpha = circle1Alpha),
-                            Color.Transparent
-                        )
-                    ),
-                    shape = RoundedCornerShape(50)
-                )
-        )
-
-        // Circle 2
-        Box(
-            modifier = Modifier
-                .size(150.dp)
-                .align(Alignment.TopEnd)
-                .offset(50.dp, (-30).dp)
-                .background(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color(0xFF03DAC6).copy(alpha = circle2Alpha),
-                            Color.Transparent
-                        )
-                    ),
-                    shape = RoundedCornerShape(50)
-                )
-        )
-
-        // Circle 3
-        Box(
-            modifier = Modifier
-                .size(120.dp)
-                .align(Alignment.BottomStart)
-                .offset((-30).dp, 40.dp)
-                .background(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color(0xFF6C63FF).copy(alpha = circle1Alpha * 0.5f),
-                            Color.Transparent
-                        )
-                    ),
-                    shape = RoundedCornerShape(50)
-                )
-        )
-    }
-}
-
-@Composable
-fun GoogleSignInButton(
-    onSignInClicked: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var isPressed by remember { mutableStateOf(false) }
-
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = tween(100),
-        label = "button_scale"
-    )
-
-    Button(
-        onClick = {
-            isPressed = true
-            onSignInClicked()
-        },
-        modifier = modifier.scale(scale),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFF6C63FF)
-        ),
-        shape = RoundedCornerShape(16.dp),
-        elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = 8.dp,
-            pressedElevation = 4.dp
-        )
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            // Google icon placeholder
-            Card(
-                modifier = Modifier.size(24.dp),
-                shape = RoundedCornerShape(4.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "G",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF4285F4)
-                        )
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Text(
-                text = "Continue with Google",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Medium,
-                    color = Color.White
-                )
-            )
-        }
-    }
-
-    LaunchedEffect(isPressed) {
-        if (isPressed) {
-            kotlinx.coroutines.delay(150)
-            isPressed = false
-        }
-    }
-}
-
-@Composable
-fun FeatureItem(
-    icon: ImageVector,
-    title: String,
-    description: String
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(100.dp)
-    ) {
-        Card(
-            modifier = Modifier.size(48.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color(0xFF6C63FF).copy(alpha = 0.2f)
-            )
-        ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = title,
-                    modifier = Modifier.size(24.dp),
-                    tint = Color(0xFF6C63FF)
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize()) {
+        TabRow(selectedTabIndex = selectedTabIndex) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = {
+                        selectedTabIndex = index
+                        onRoleSelected(tabs[index].lowercase())
+                    },
+                    text = { Text(title) }
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(40.dp))
 
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelMedium.copy(
-                fontWeight = FontWeight.SemiBold,
-                color = Color.White
-            ),
-            textAlign = TextAlign.Center
-        )
-
-        Text(
-            text = description,
-            style = MaterialTheme.typography.labelSmall.copy(
-                color = Color.White.copy(alpha = 0.7f)
-            ),
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 2.dp)
-        )
+        Button(
+            onClick = onSignInClicked,
+            modifier = Modifier
+                .padding(20.dp)
+                .height(56.dp)
+                .fillMaxWidth(0.7f),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+        ) {
+            Text("Sign in with Google")
+        }
     }
 }
+
+
+
