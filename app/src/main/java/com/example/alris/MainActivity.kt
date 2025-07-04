@@ -122,8 +122,11 @@ class MainActivity : ComponentActivity() {
                                 loginRole == "user" -> {
                                     startActivity(Intent(this@MainActivity, DashboardActivity()::class.java))
                                 }
-                                loginRole == "admin" -> {
+                                loginRole == "admin" && status == "approved" -> {
                                     startActivity(Intent(this@MainActivity, AdminActivity::class.java))
+                                }
+                                loginRole == "admin" && status == "denied" -> {
+                                    showToast("Access denied. You are not an authorized admin.")
                                 }
                                 status == "pending" && loginRole == "authority" -> {
                                     startActivity(Intent(this@MainActivity, PendingApprovalActivity::class.java))
