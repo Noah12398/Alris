@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.alris.admin.AdminActivity
+import com.example.alris.authority.AuthorityDashboardActivity
 import com.example.alris.authority.PendingApprovalActivity
 import com.example.alris.ui.theme.AlrisTheme
 import com.example.alris.user.DashboardActivity
@@ -148,8 +149,9 @@ class MainActivity : ComponentActivity() {
                                 status == "pending" && loginRole == "authority" -> {
                                     startActivity(Intent(this@MainActivity, PendingApprovalActivity::class.java))
                                 }
-                                status == "approved" -> {
-                                    startActivity(Intent(this@MainActivity, DashboardActivity::class.java))
+                                status == "approved" && loginRole == "authority"-> {
+                                    startActivity(Intent(this@MainActivity,
+                                        AuthorityDashboardActivity::class.java))
                                 }
                                 else -> {
                                     showToast("Access not granted. Please wait for approval.")

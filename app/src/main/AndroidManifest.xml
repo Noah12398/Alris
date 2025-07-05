@@ -38,7 +38,7 @@
         <activity android:name=".user.DashboardActivity" />
         <activity android:name=".authority.PendingApprovalActivity" />
         <activity android:name=".admin.AdminActivity" />
-        <activity android:name=".MapActivity" />
+        <activity android:name=".authority.AuthorityDashboardActivity" />
 
 
 

@@ -7,13 +7,14 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 
 object Constants {
-    const val BASE_URL = "http://192.168.1.44:5000"
+    const val BASE_URL = "http://192.168.0.159:5000"
 
     // Make sure you have this somewhere globally accessible (e.g., Constants.kt)
     val googleSignInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-        .requestIdToken("YOUR_WEB_CLIENT_ID") // Replace with your real web client ID
+        .requestIdToken("")
         .requestEmail()
         .build()
+
 
     fun logoutAndGoToLogin(context: Context) {
         FirebaseAuth.getInstance().signOut()
