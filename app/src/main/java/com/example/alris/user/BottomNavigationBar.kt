@@ -1,9 +1,10 @@
-package com.example.alris
+package com.example.alris.user
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 
@@ -28,4 +29,4 @@ fun BottomNavigationBar(navController: NavHostController) {
     }
 }
 
-data class BottomNavItem(val route: String, val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)
+data class BottomNavItem(val route: String, val label: String, val icon: ImageVector)

@@ -1,12 +1,16 @@
-package com.example.alris
+package com.example.alris.user
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import androidx.navigation.compose.*
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.alris.SettingsScreen
 import com.example.alris.ui.theme.AlrisTheme
 
 class DashboardActivity : ComponentActivity() {
@@ -20,7 +24,7 @@ class DashboardActivity : ComponentActivity() {
                         BottomNavigationBar(navController)
                     }
                 ) { padding ->
-                    Box(modifier = Modifier.padding(padding)) {
+                    Box(modifier = Modifier.Companion.padding(padding)) {
                         NavHost(navController, startDestination = "map") {
                             composable("map") { MapScreen() }
                             composable("camera") { CameraScreen() }

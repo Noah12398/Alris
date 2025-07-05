@@ -1,5 +1,6 @@
-package com.example.alris
+package com.example.alris.user
 
+import android.R
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.Drawable
@@ -22,12 +23,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -40,10 +39,7 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import com.example.alris.ui.theme.AlrisTheme
+import org.osmdroid.tileprovider.tilesource.ITileSource
 
 
 @SuppressLint("MissingPermission")
@@ -620,7 +616,7 @@ fun StatusBadge(
 // Helper function to get marker icon based on category and status
 private fun getMarkerIcon(context: Context, category: ReportCategory, status: ReportStatus): Drawable? {
     // You can customize this to use different icons for different categories and statuses
-    return ContextCompat.getDrawable(context, android.R.drawable.ic_menu_mylocation)
+    return ContextCompat.getDrawable(context, R.drawable.ic_menu_mylocation)
 }
 
 // Data classes
@@ -647,7 +643,7 @@ enum class ReportStatus {
     RESOLVED
 }
 
-enum class MapType(val displayName: String, val tileSource: org.osmdroid.tileprovider.tilesource.ITileSource) {
+enum class MapType(val displayName: String, val tileSource: ITileSource) {
     STANDARD("Map", TileSourceFactory.MAPNIK),
     SATELLITE("Satellite", TileSourceFactory.WIKIMEDIA)
 }

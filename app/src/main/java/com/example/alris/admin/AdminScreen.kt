@@ -1,4 +1,4 @@
-package com.example.alris
+package com.example.alris.admin
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent

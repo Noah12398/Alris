@@ -35,9 +35,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".DashboardActivity" />
-        <activity android:name=".PendingApprovalActivity" />
-        <activity android:name=".AdminActivity" />
+        <activity android:name=".user.DashboardActivity" />
+        <activity android:name=".authority.PendingApprovalActivity" />
+        <activity android:name=".admin.AdminActivity" />
         <activity android:name=".MapActivity" />
 
 

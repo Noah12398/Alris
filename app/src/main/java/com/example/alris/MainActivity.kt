@@ -27,7 +27,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.alris.admin.AdminActivity
+import com.example.alris.authority.PendingApprovalActivity
 import com.example.alris.ui.theme.AlrisTheme
+import com.example.alris.user.DashboardActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -264,7 +267,8 @@ fun GoogleSignInTabbedScreen(onSignInClicked: () -> Unit, onRoleSelected: (Strin
                     // Role Description
                     AnimatedContent(
                         targetState = selectedTabIndex,
-                        transitionSpec = {
+                        Modifier.fillMaxWidth(),
+                                transitionSpec = {
                             slideInHorizontally { it } + fadeIn() togetherWith
                                     slideOutHorizontally { -it } + fadeOut()
                         }
@@ -376,6 +380,7 @@ fun TabItem(
     Card(
         onClick = onClick,
         modifier = modifier
+            .fillMaxWidth() // Ensure Card expands horizontally
             .clip(RoundedCornerShape(12.dp)),
         colors = CardDefaults.cardColors(
             containerColor = backgroundColor
@@ -384,9 +389,13 @@ fun TabItem(
             defaultElevation = if (isSelected) 4.dp else 0.dp
         )
     ) {
+        // Center both vertically & horizontally
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(12.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
                 imageVector = tab.icon,
@@ -401,12 +410,12 @@ fun TabItem(
                 text = tab.title,
                 fontSize = 12.sp,
                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                color = textColor
+                color = textColor,
+                textAlign = TextAlign.Center
             )
         }
     }
 }
-
 data class TabData(
     val title: String,
     val icon: ImageVector,
