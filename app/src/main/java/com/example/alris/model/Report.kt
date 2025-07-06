@@ -2,8 +2,8 @@ package com.example.alris.model
 
 data class Report(
     val id:String,
-    val filename: String,
-    val description: String,
+    val filename: String?=null,
+    val description: String?=null,
     val latitude: Double?,
     val longitude: Double?,
     val classification: String,

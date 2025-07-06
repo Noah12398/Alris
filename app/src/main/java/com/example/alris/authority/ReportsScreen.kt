@@ -87,9 +87,9 @@ fun ReportCard(report: Report) {
         elevation = CardDefaults.cardElevation()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(report.classification.uppercase(), style = MaterialTheme.typography.titleMedium)
+            Text(report.classification?.uppercase() ?: "UNKNOWN", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(report.description, style = MaterialTheme.typography.bodyMedium)
+            Text(report.description ?: "No description", style = MaterialTheme.typography.bodyMedium)
             Spacer(modifier = Modifier.height(8.dp))
 
             if (report.public_url.isNotBlank()) {
