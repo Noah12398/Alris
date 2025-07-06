@@ -11,7 +11,7 @@ object Constants {
 
     // Make sure you have this somewhere globally accessible (e.g., Constants.kt)
     val googleSignInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-        .requestIdToken("")
+        .requestIdToken("379087277976-35hnmmq1bdv3oipd61e2rtm5ev30c36n.apps.googleusercontent.com")
         .requestEmail()
         .build()
 

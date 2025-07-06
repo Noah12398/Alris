@@ -139,25 +139,28 @@ class MainActivity : ComponentActivity() {
                             when {
                                 loginRole == "user" -> {
                                     startActivity(Intent(this@MainActivity, DashboardActivity()::class.java))
+                                    finish()
                                 }
                                 loginRole == "admin" && status == "approved" -> {
                                     startActivity(Intent(this@MainActivity, AdminActivity::class.java))
+                                    finish()
                                 }
                                 loginRole == "admin" && status == "denied" -> {
-                                    showToast("Access denied. You are not an authorized admin.")
+                                    showAccessDeniedDialog("You are not an authorized admin.")
                                 }
                                 status == "pending" && loginRole == "authority" -> {
                                     startActivity(Intent(this@MainActivity, PendingApprovalActivity::class.java))
+                                    finish()
                                 }
                                 status == "approved" && loginRole == "authority"-> {
                                     startActivity(Intent(this@MainActivity,
                                         AuthorityDashboardActivity::class.java))
+                                    finish()
                                 }
                                 else -> {
-                                    showToast("Access not granted. Please wait for approval.")
+                                    showAccessDeniedDialog("Access not granted. Please wait for approval or try with a different account.")
                                 }
                             }
-                            finish()
                         } catch (e: Exception) {
                             showToast("Error parsing server response.")
                             Log.e("LoginError", "JSON parse error: $body", e)
@@ -168,6 +171,35 @@ class MainActivity : ComponentActivity() {
                 }
             }
         })
+    }
+
+    private fun showAccessDeniedDialog(message: String) {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Access Denied")
+            .setMessage(message)
+            .setPositiveButton("Try Different Account") { _, _ ->
+                signOutAndSignInAgain()
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setCancelable(false)
+            .show()
+    }
+
+    private fun signOutAndSignInAgain() {
+        // Sign out from Firebase
+        auth.signOut()
+
+        // Sign out from Google
+        googleSignInClient.signOut().addOnCompleteListener {
+            // Force account selection by revoking access
+            googleSignInClient.revokeAccess().addOnCompleteListener {
+                // Start sign-in flow again
+                val signInIntent = googleSignInClient.signInIntent
+                startActivityForResult(signInIntent, RC_SIGN_IN)
+            }
+        }
     }
 
     private fun showToast(msg: String) {
@@ -270,7 +302,7 @@ fun GoogleSignInTabbedScreen(onSignInClicked: () -> Unit, onRoleSelected: (Strin
                     AnimatedContent(
                         targetState = selectedTabIndex,
                         Modifier.fillMaxWidth(),
-                                transitionSpec = {
+                        transitionSpec = {
                             slideInHorizontally { it } + fadeIn() togetherWith
                                     slideOutHorizontally { -it } + fadeOut()
                         }
@@ -418,6 +450,7 @@ fun TabItem(
         }
     }
 }
+
 data class TabData(
     val title: String,
     val icon: ImageVector,
