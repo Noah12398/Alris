@@ -27,7 +27,7 @@ class DashboardActivity : ComponentActivity() {
                     Box(modifier = Modifier.Companion.padding(padding)) {
                         NavHost(navController, startDestination = "map") {
                             composable("map") { MapScreen() }
-                            composable("camera") { CameraScreen() }
+                            composable("camera") { MultiPhotoCameraScreen() }
                             composable("settings") { SettingsScreen() }
                         }
                     }

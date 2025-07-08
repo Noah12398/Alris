@@ -6,7 +6,7 @@ data class Report(
     val description: String?=null,
     val latitude: Double?,
     val longitude: Double?,
-    val classification: String,
+    val label: String,
     val is_spam: Boolean,
     val is_fake: Boolean,
     val public_url: String,
