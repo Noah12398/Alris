@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.serialization")
     id("com.google.gms.google-services")
 }
 
@@ -65,6 +66,7 @@ dependencies {
     // Firebase libraries (no version numbers!)
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
     // Google Sign-In
     implementation("com.google.android.gms:play-services-auth:21.0.0")

@@ -60,6 +60,9 @@ import coil.request.ImageRequest
 import com.example.alris.Constants
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.Dispatchers
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import okhttp3.*
@@ -69,6 +72,21 @@ import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
+
+@Serializable
+data class ImagePayload(
+    val filename: String,
+    val base64: String
+)
+
+@Serializable
+data class UploadPayload(
+    val latitude: Double,
+    val longitude: Double,
+    val images: List<ImagePayload>
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -152,10 +170,8 @@ fun MultiPhotoCameraScreen() {
             uploadStatus = UploadStatus.Uploading
 
             var allSuccess = true
-            for (file in photoFiles) {
-                uploadToServer(file, currentLocation.latitude, currentLocation.longitude) { success ->
-                    if (!success) allSuccess = false
-                }
+            uploadMultipleImagesAsJson(photoFiles, currentLocation.latitude, currentLocation.longitude) { success ->
+                if (!success) allSuccess = false
             }
 
             uploadStatus = if (allSuccess) UploadStatus.Success else UploadStatus.Error("One or more uploads failed")
@@ -690,23 +706,36 @@ fun startCamera(
     }, ContextCompat.getMainExecutor(context))
 }
 
-fun uploadToServer(
-    file: File,
+fun uploadMultipleImagesAsJson(
+    files: List<File>,
     latitude: Double,
     longitude: Double,
     onComplete: (Boolean) -> Unit
 ) {
     val client = OkHttpClient()
 
-    val requestBody = MultipartBody.Builder()
-        .setType(MultipartBody.FORM)
-        .addFormDataPart("photo", file.name, file.asRequestBody("image/jpeg".toMediaTypeOrNull()))
-        .addFormDataPart("latitude", latitude.toString())
-        .addFormDataPart("longitude", longitude.toString())
-        .build()
+    val images = files.mapNotNull { file ->
+        if (file.exists()) {
+            try {
+                val base64 = android.util.Base64.encodeToString(file.readBytes(), android.util.Base64.NO_WRAP)
+                ImagePayload(filename = file.name, base64 = base64)
+            } catch (e: IOException) {
+                Log.e("UPLOAD", "Failed to read file: ${file.name}", e)
+                null
+            }
+        } else {
+            Log.e("UPLOAD", "File not found: ${file.absolutePath}")
+            null
+        }
+    }
+
+    val payload = UploadPayload(latitude = latitude, longitude = longitude, images = images)
+
+    val json = Json.encodeToString(payload)
+    val requestBody = RequestBody.create("application/json".toMediaTypeOrNull(), json)
 
     val request = Request.Builder()
-        .url("${Constants.BASE_URL}/upload")
+        .url("${Constants.BASE_URL}/upload/multi")
         .post(requestBody)
         .build()
 
@@ -717,11 +746,13 @@ fun uploadToServer(
         }
 
         override fun onResponse(call: Call, response: Response) {
-            Log.d("UPLOAD", "Success: ${response.body?.string()}")
+            Log.d("UPLOAD", "Upload response: ${response.body?.string()}")
             onComplete(response.isSuccessful)
         }
     })
 }
+
+
 
 fun hasPermissions(context: Context): Boolean {
     return listOf(
